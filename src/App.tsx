@@ -1,6 +1,6 @@
 import { useRef, useState, type CSSProperties, type PointerEvent } from "react"
 
-const assetPath = "/assets"
+const assetPath = `${import.meta.env.BASE_URL}assets`
 
 const fireflies = [
   [8, 78, 0.4, 9.8],
