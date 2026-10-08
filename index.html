@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Roshan Giri — aerospace engineering student and multidisciplinary designer."
+    />
+    <meta name="theme-color" content="#0a1024" />
+    <title>Roshan Giri — Aerospace &amp; Design</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Kaushan+Script&family=Montserrat:wght@400;500;600;700&family=Unbounded:wght@600;700&display=swap");
+
+      :root {
+        color: #f4f4ff;
+        background: #0a1024;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        min-width: 320px;
+        min-height: 100vh;
+        margin: 0;
+        overflow-x: hidden;
+      }
+      button, a { -webkit-tap-highlight-color: transparent; }
+      button { font: inherit; }
+
+      .hero {
+        --sky-x: 0px;
+        --sky-y: 0px;
+        --cloud-left-x: 0px;
+        --cloud-left-y: 0px;
+        --cloud-right-x: 0px;
+        --cloud-right-y: 0px;
+        --land-x: 0px;
+        --land-y: 0px;
+        --plane-x: 0px;
+        --plane-y: 0px;
+        --pointer-x: 50%;
+        --pointer-y: 50%;
+        position: relative;
+        isolation: isolate;
+        min-height: 100vh;
+        overflow: hidden;
+        background: #0a1024;
+      }
+      .scene, .fireflies {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        pointer-events: none;
+      }
+      .scene { z-index: -2; }
+      .scene__layer {
+        position: absolute;
+        max-width: none;
+        user-select: none;
+        transition: transform 180ms ease-out;
+      }
+      .scene__sky {
+        inset: -3%;
+        width: 106%;
+        height: 106%;
+        object-fit: cover;
+        transform: scaleX(-1) translate(var(--sky-x), var(--sky-y));
+        filter: brightness(0.86) saturate(0.9);
+      }
+      .scene__clouds { object-fit: contain; opacity: 0.7; }
+      .scene__clouds--left {
+        top: -22%;
+        left: -13%;
+        width: min(66vw, 805px);
+        transform: translate(var(--cloud-left-x), var(--cloud-left-y));
+      }
+      .scene__clouds--right {
+        top: -25%;
+        left: 41%;
+        width: min(83vw, 1270px);
+        transform: translate(var(--cloud-right-x), var(--cloud-right-y));
+      }
+      .scene__wash {
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(180deg, rgba(31, 14, 66, 0.72) 4%, transparent 69%),
+          linear-gradient(251deg, rgba(32, 43, 58, 0.28) 7%, rgba(9, 13, 25, 0.3) 91%);
+      }
+      .landscape-overlay {
+        position: absolute;
+        z-index: 3;
+        inset: -7% -4% -4%;
+        width: 108%;
+        height: 111%;
+        max-width: none;
+        object-fit: cover;
+        pointer-events: none;
+        user-select: none;
+        transform: translate(var(--land-x), var(--land-y));
+        transition: transform 180ms ease-out;
+      }
+      .scene__plane {
+        position: absolute;
+        z-index: 3;
+        top: 20.5%;
+        left: 38.5%;
+        width: clamp(140px, 13.5vw, 210px);
+        max-width: none;
+        filter: drop-shadow(0 10px 10px rgba(4, 8, 24, 0.3));
+        transform: translate(var(--plane-x), var(--plane-y)) rotate(-1deg);
+        transition: transform 190ms ease-out;
+        animation: plane-float 5s ease-in-out infinite;
+      }
+      .cursor-glow {
+        position: absolute;
+        z-index: 6;
+        left: var(--pointer-x);
+        top: var(--pointer-y);
+        width: 170px;
+        height: 170px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255, 222, 74, 0.08), transparent 68%);
+        transform: translate(-50%, -50%);
+        mix-blend-mode: screen;
+      }
+      .fireflies { z-index: 1; }
+      .firefly {
+        position: absolute;
+        left: var(--left);
+        top: var(--top);
+        width: 14px;
+        height: 14px;
+        opacity: 0;
+        filter: drop-shadow(0 0 5px rgba(255, 220, 65, 0.56));
+        animation:
+          firefly-drift var(--duration) ease-in-out var(--delay) infinite,
+          firefly-blink 3.3s ease-in-out var(--delay) infinite;
+      }
+      .firefly img { display: block; }
+
+      .nav {
+        position: absolute;
+        z-index: 10;
+        top: 0;
+        left: 0;
+        display: flex;
+        width: 100%;
+        align-items: center;
+        justify-content: space-between;
+        padding: 32px clamp(28px, 4.65vw, 72px);
+      }
+      .nav__group {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 6px 8px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+        box-shadow: inset 0 1px rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(4px);
+      }
+      .nav__link,
+      .contact-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        color: #fff;
+        font-family: "Montserrat", sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 20px;
+        text-decoration: none;
+        transition: background 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+      }
+      .nav__link { padding: 6px 20px; }
+      .nav__link:hover,
+      .nav__link:focus-visible { background: rgba(255, 255, 255, 0.12); }
+      .nav__link--active,
+      .contact-button {
+        background: #514de3;
+        box-shadow: 0 4px 3px rgba(127, 124, 255, 0.28), 0 2px 2px rgba(127, 124, 255, 0.25);
+      }
+      .contact-button { padding: 8px 20px; }
+      .contact-button:hover,
+      .contact-button:focus-visible {
+        transform: translateY(-2px);
+        background: #6662f0;
+        box-shadow: 0 9px 18px rgba(22, 18, 113, 0.3), 0 0 0 4px rgba(127, 124, 255, 0.14);
+      }
+      .nav__link:focus-visible,
+      .contact-button:focus-visible,
+      .stat-card:focus-visible {
+        outline: 2px solid #ffe45c;
+        outline-offset: 3px;
+      }
+
+      .hero__content {
+        position: relative;
+        display: flex;
+        min-height: 100vh;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: clamp(180px, 27.45vh, 241px) clamp(28px, 4.2vw, 65px) clamp(28px, 7vh, 64px);
+      }
+      .name {
+        position: relative;
+        z-index: 2;
+        width: fit-content;
+        color: #f4f4ff;
+        text-align: left;
+        text-shadow: 0 8px 28px rgba(5, 9, 25, 0.22);
+      }
+      .name__hello {
+        position: relative;
+        z-index: 1;
+        margin: 0 0 -20px 10px;
+        font-family: "Kaushan Script", cursive;
+        font-size: clamp(46px, 4.66vw, 72.193px);
+        font-weight: 400;
+        line-height: 1;
+        white-space: nowrap;
+      }
+      .name h1 {
+        margin: 0;
+        font-family: "Unbounded", sans-serif;
+        font-size: clamp(64px, 8.85vw, 137.058px);
+        font-weight: 700;
+        letter-spacing: -0.055em;
+        line-height: 1;
+      }
+      .name__role {
+        margin: -4px 0 0 2px;
+        font-family: "Unbounded", sans-serif;
+        font-size: clamp(13px, 1.55vw, 24px);
+        font-weight: 600;
+        line-height: 1;
+      }
+      .cards {
+        position: relative;
+        z-index: 4;
+        display: grid;
+        width: min(936px, 100%);
+        grid-template-columns: repeat(3, minmax(0, 288px));
+        align-items: end;
+        gap: clamp(20px, 3vw, 36px);
+      }
+      .about-card,
+      .stat-card {
+        height: 176px;
+        border: 0;
+        border-radius: 16px;
+        color: #0a1024;
+        background: #f4f4ff;
+        box-shadow: 0 20px 12.5px rgba(0, 0, 0, 0.2), 0 8px 5px rgba(0, 0, 0, 0.2);
+      }
+      .about-card { display: flex; align-items: center; padding: 20px; }
+      .about-card p {
+        margin: 0;
+        font-family: "Montserrat", sans-serif;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 22.75px;
+      }
+      .stat-card {
+        position: relative;
+        display: flex;
+        cursor: pointer;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 20px;
+        text-align: center;
+        transition: transform 220ms ease, box-shadow 220ms ease, background 220ms ease;
+      }
+      .stat-card::before,
+      .stat-card::after {
+        position: absolute;
+        z-index: -1;
+        inset: 0;
+        content: "";
+        border-radius: inherit;
+        background: rgba(230, 230, 234, 0.6);
+        transition: transform 220ms ease;
+      }
+      .stat-card::before { transform: translate(6px, 6px); }
+      .stat-card::after { transform: translate(12px, 12px); opacity: 0.34; }
+      .stat-card:hover { transform: translateY(-8px); box-shadow: 0 28px 22px rgba(0, 0, 0, 0.25), 0 8px 5px rgba(0, 0, 0, 0.2); }
+      .stat-card:hover::before,
+      .stat-card.is-active::before { transform: translate(8px, 10px) rotate(1deg); }
+      .stat-card:hover::after,
+      .stat-card.is-active::after { transform: translate(16px, 18px) rotate(2deg); }
+      .stat-card.is-active { background: #fffdec; transform: translateY(-8px); }
+      .stat-card__count {
+        color: #514de3;
+        font-family: "Unbounded", sans-serif;
+        font-size: 24px;
+        font-weight: 700;
+        line-height: 32px;
+      }
+      .stat-card__label,
+      .stat-card__detail {
+        font-family: "Montserrat", sans-serif;
+        font-weight: 500;
+        text-transform: uppercase;
+      }
+      .stat-card__label { color: rgba(10, 16, 36, 0.6); font-size: 12px; letter-spacing: 0.6px; line-height: 16px; }
+      .stat-card__detail {
+        overflow: hidden;
+        max-height: 0;
+        color: rgba(10, 16, 36, 0.65);
+        font-size: 9px;
+        letter-spacing: 0.45px;
+        line-height: 13px;
+        opacity: 0;
+        transition: max-height 220ms ease, opacity 220ms ease;
+      }
+      .stat-card.is-active .stat-card__detail { max-height: 30px; opacity: 1; }
+      .interaction-hint {
+        position: absolute;
+        right: clamp(28px, 4.65vw, 72px);
+        bottom: 26px;
+        z-index: 5;
+        margin: 0;
+        color: rgba(244, 244, 255, 0.62);
+        font-family: "Montserrat", sans-serif;
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      @keyframes firefly-drift {
+        0%,
+        100% { transform: translate(0, 0) scale(0.65); }
+        25% { transform: translate(var(--drift-out), -34px) scale(1); }
+        55% { transform: translate(var(--drift-back), -12px) scale(0.75); }
+        78% { transform: translate(var(--drift-low), 17px) scale(1.1); }
+      }
+      @keyframes firefly-blink {
+        0%,
+        20%,
+        100% { opacity: 0.08; }
+        44% { opacity: 0.82; }
+        62% { opacity: 0.26; }
+        76% { opacity: 0.7; }
+      }
+      @keyframes plane-float {
+        0%,
+        100% { margin-top: 0; }
+        50% { margin-top: -8px; }
+      }
+
+      @media (max-width: 900px) {
+        .hero,
+        .hero__content { min-height: 980px; }
+        .hero__content { padding-top: 230px; }
+        .name h1 { font-size: clamp(54px, 11vw, 94px); }
+        .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .about-card { grid-column: 1 / -1; width: min(430px, 100%); }
+        .landscape-overlay { width: 145%; right: -22%; left: -23%; }
+        .interaction-hint { display: none; }
+      }
+      @media (max-width: 620px) {
+        .hero,
+        .hero__content { min-height: 1120px; }
+        .nav { align-items: flex-start; padding: 20px 18px; }
+        .nav__group { gap: 0; padding: 4px; }
+        .nav__link { padding: 6px 11px; font-size: 12px; }
+        .contact-button { padding: 8px 13px; font-size: 12px; }
+        .hero__content { padding: 195px 20px 54px; }
+        .name__hello { margin-bottom: -9px; margin-left: 4px; font-size: 39px; }
+        .name h1 { max-width: 94vw; font-size: clamp(47px, 15.5vw, 78px); line-height: 0.94; }
+        .name__role { max-width: 340px; margin-top: 9px; font-size: 11px; line-height: 1.4; }
+        .cards { grid-template-columns: 1fr; gap: 20px; }
+        .about-card { grid-column: auto; width: 100%; }
+        .scene__clouds--left { top: -6%; left: -65%; width: 150vw; }
+        .scene__clouds--right { top: 5%; left: 30%; width: 170vw; }
+        .landscape-overlay { inset: auto -55% -2% -65%; width: 220%; height: 82%; object-position: 59% bottom; }
+        .scene__plane { top: 13%; left: 53%; width: 135px; }
+        .firefly:nth-child(-n + 4) { display: none; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+        .firefly { opacity: 0.7; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="hero" id="home" aria-label="Roshan Giri portfolio">
+        <div class="scene" aria-hidden="true">
+          <img class="scene__layer scene__sky" data-asset="cf4fb.png" alt="" />
+          <img class="scene__layer scene__clouds scene__clouds--left" data-asset="cbb4d.png" alt="" />
+          <img class="scene__layer scene__clouds scene__clouds--right" data-asset="84fcd.png" alt="" />
+          <div class="scene__wash"></div>
+          <img class="scene__plane" data-asset="1dcb6.png" alt="" />
+          <div class="cursor-glow"></div>
+        </div>
+        <div class="fireflies" aria-hidden="true"></div>
+        <img class="landscape-overlay" data-asset="92c8f.png" alt="" aria-hidden="true" />
+
+        <nav class="nav" aria-label="Primary navigation">
+          <div class="nav__group">
+            <a class="nav__link nav__link--active" href="#home" aria-current="page">Home</a>
+            <a class="nav__link" href="#about">About</a>
+            <a class="nav__link" href="#works">Works</a>
+          </div>
+          <a class="contact-button" href="#about">Contact Me</a>
+        </nav>
+
+        <div class="hero__content">
+          <header class="name">
+            <p class="name__hello">Hello, I'm</p>
+            <h1>Roshan Giri</h1>
+            <p class="name__role">Aerospace Engineering Student</p>
+          </header>
+
+          <div class="cards" id="works">
+            <article class="about-card" id="about">
+              <p>...an Aerospace Engineering student who moonlights in design, interest in everything at once, might just be allergic to free time, although always on internet....</p>
+            </article>
+            <button class="stat-card" type="button" aria-pressed="false">
+              <span class="stat-card__count">00+</span>
+              <span class="stat-card__label">Aerospace Projects</span>
+              <span class="stat-card__detail">Flight systems, concepts &amp; research</span>
+            </button>
+            <button class="stat-card" type="button" aria-pressed="false">
+              <span class="stat-card__count">00+</span>
+              <span class="stat-card__label">Design Projects</span>
+              <span class="stat-card__detail">Interfaces, identities &amp; visual stories</span>
+            </button>
+          </div>
+        </div>
+        <p class="interaction-hint">Move to explore · Select a project</p>
+      </section>
+    </main>
+
+    <script>
+      (() => {
+        const assetRoot = window.location.protocol === "file:" ? "./public/assets/" : "/assets/";
+
+        document.querySelectorAll("[data-asset]").forEach((image) => {
+          image.src = assetRoot + image.dataset.asset;
+        });
+
+        const fireflyPositions = [
+          [8, 78, 0.4, 9.8], [18, 82, 2.2, 10.8], [31, 72, 4.1, 9.9],
+          [42, 88, 1.1, 11.3], [55, 74, 3.6, 9.6], [66, 84, 5.5, 10.9],
+          [74, 69, 1.8, 9.2], [83, 79, 4.7, 11.1], [91, 74, 2.9, 10.2],
+        ];
+
+        const fireflies = document.querySelector(".fireflies");
+        fireflyPositions.forEach(([left, top, delay, duration], index) => {
+          const fly = document.createElement("span");
+          fly.className = "firefly";
+          fly.style.setProperty("--left", left + "%");
+          fly.style.setProperty("--top", top + "%");
+          fly.style.setProperty("--delay", delay + "s");
+          fly.style.setProperty("--duration", duration + "s");
+          fly.style.setProperty("--drift-out", (index % 2 === 0 ? 22 : -22) + "px");
+          fly.style.setProperty("--drift-back", (index % 2 === 0 ? -13 : 13) + "px");
+          fly.style.setProperty("--drift-low", (index % 2 === 0 ? 16 : -16) + "px");
+          const glow = document.createElement("img");
+          glow.src = assetRoot + (index % 3 === 0 ? "fe347.svg" : "cd999.svg");
+          glow.alt = "";
+          fly.append(glow);
+          fireflies.append(fly);
+        });
+
+        const hero = document.querySelector(".hero");
+        const motionOkay = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (hero && motionOkay) {
+          hero.addEventListener("pointermove", (event) => {
+            if (event.pointerType === "touch") return;
+            const bounds = hero.getBoundingClientRect();
+            const x = (event.clientX - bounds.left) / bounds.width - 0.5;
+            const y = (event.clientY - bounds.top) / bounds.height - 0.5;
+            const offsets = {
+              "--sky-x": x * -8,
+              "--sky-y": y * -5,
+              "--cloud-left-x": x * 19,
+              "--cloud-left-y": y * 12,
+              "--cloud-right-x": x * -24,
+              "--cloud-right-y": y * -14,
+              "--land-x": x * -14,
+              "--land-y": y * -8,
+              "--plane-x": x * 38,
+              "--plane-y": y * 24,
+            };
+            Object.entries(offsets).forEach(([key, value]) => {
+              hero.style.setProperty(key, value + "px");
+            });
+            hero.style.setProperty("--pointer-x", event.clientX - bounds.left + "px");
+            hero.style.setProperty("--pointer-y", event.clientY - bounds.top + "px");
+          });
+
+          hero.addEventListener("pointerleave", () => {
+            [
+              "--sky-x",
+              "--sky-y",
+              "--cloud-left-x",
+              "--cloud-left-y",
+              "--cloud-right-x",
+              "--cloud-right-y",
+              "--land-x",
+              "--land-y",
+              "--plane-x",
+              "--plane-y",
+            ].forEach((key) => hero.style.setProperty(key, "0px"));
+            hero.style.setProperty("--pointer-x", "50%");
+            hero.style.setProperty("--pointer-y", "50%");
+          });
+        }
+
+        document.querySelectorAll(".stat-card").forEach((card) => {
+          card.addEventListener("click", () => {
+            const active = card.classList.toggle("is-active");
+            card.setAttribute("aria-pressed", String(active));
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>
