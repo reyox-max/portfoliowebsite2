@@ -448,7 +448,7 @@
 
     <script>
       (() => {
-        const assetRoot = window.location.protocol === "file:" ? "./public/assets/" : "/assets/";
+        const assetRoot = window.location.protocol === "file:" ? "./public/assets/" : "./assets/";
 
         document.querySelectorAll("[data-asset]").forEach((image) => {
           image.src = assetRoot + image.dataset.asset;
